@@ -145,3 +145,7 @@ All API endpoints are defined in [main.py](file:///c:/Users/rohit/.gemini/antigr
 3.  **Real-time Keyword Searching**: Enter full text search queries on the fly to inspect property summaries, titles, localities, or amenity descriptions.
 4.  **Responsive Layout**: Full design compatibility with mobile devices, tablets, and large screens, with a premium full-width Hero Header.
 5.  **Interactive Detail Modal**: Open an overlay showing the agent's phone, email, details, and map attributes in [PropertyModal.jsx](file:///c:/Users/rohit/.gemini/antigravity/scratch/property-search-app/frontend/src/components/PropertyModal.jsx).
+
+
+<img width="1919" height="910" alt="image" src="https://github.com/user-attachments/assets/6f4c7baa-3d7a-480c-aa31-57d5641ebc2c" />
+
