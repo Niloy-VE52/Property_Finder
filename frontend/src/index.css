@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 body {
   font-family: 'Outfit', 'Inter', sans-serif;
@@ -79,3 +79,134 @@ body {
 input[type="range"] {
   @apply accent-brand-500;
 }
+
+/* ============================================
+   AI Chat Panel Styles
+   ============================================ */
+
+/* Floating Action Button pulse ring */
+@keyframes fabPulse {
+  0% { box-shadow: 0 0 0 0 rgba(52, 158, 128, 0.5); }
+  70% { box-shadow: 0 0 0 14px rgba(52, 158, 128, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(52, 158, 128, 0); }
+}
+
+.chat-fab-pulse {
+  animation: fabPulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Chat panel slide-up entrance */
+@keyframes chatSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.chat-slide-up {
+  animation: chatSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Chat panel slide-down exit */
+@keyframes chatSlideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+}
+
+.chat-slide-down {
+  animation: chatSlideDown 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+/* Message bubble entrance */
+@keyframes msgFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-msg-enter {
+  animation: msgFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Typing indicator dots */
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+
+.typing-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #94a3b8;
+  animation: typingBounce 1.4s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* Chat glassmorphism panel */
+.glass-chat-panel {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* Chat property card hover */
+.chat-property-card {
+  transition: all 0.2s ease;
+}
+
+.chat-property-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.12);
+}
+
+/* Chat overlay */
+.chat-overlay {
+  background: rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* Chat scrollbar */
+.chat-messages-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chat-messages-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-messages-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+/* Property carousel in chat */
+.chat-property-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.chat-property-scroll::-webkit-scrollbar {
+  display: none;
+}
+

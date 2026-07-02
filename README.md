@@ -1,151 +1,117 @@
 # MagicProperty Elite - Indian Property Search App
 
-MagicProperty Elite is a full-stack web application designed for browsing and filtering residential property listings in major Indian cities. The application provides an elegant, modern, and responsive interface to search, filter, and view premium flats, villas, and independent houses for rent or purchase.
+![MagicProperty Elite](https://img.shields.io/badge/Status-Active-brightgreen)
+![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/Frontend-React-61DAFB?logo=react&logoColor=black)
+![TailwindCSS](https://img.shields.io/badge/Styling-Tailwind_CSS-38B2AC?logo=tailwind-css&logoColor=white)
 
----
+MagicProperty Elite is a premium, full-stack real estate property search application tailored for discerning buyers and renters in India's leading metro cities (Bangalore, Mumbai, Chennai, and Hyderabad). It features a modern Glassmorphism UI and a powerful AI-driven conversational assistant to help users find their perfect home.
 
-## 🏗️ Architecture & Tech Stack
+## 🌟 Features
 
-The project is structured as a decoupled monorepo containing a Python-based FastAPI backend and a React-based Vite frontend.
+- **Advanced Property Search**: Filter properties by city, purpose (buy/rent), property type (flat/house), BHK, budget, and custom keywords.
+- **AI Conversational Assistant**: A multi-turn, AI-powered chat assistant that acts as a virtual property consultant. It understands user requirements, answers real-estate queries, and automatically searches the database to suggest matching properties inline.
+- **Premium User Interface**: Modern aesthetics utilizing glassmorphism, subtle animations, responsive grid layouts, and curated color palettes.
+- **Detailed Property Views**: View comprehensive property details including amenities, agent contact info, and high-quality images.
 
-### Backend ([backend](file:///c:/Users/rohit/.gemini/antigravity/scratch/property-search-app/backend))
-*   **Web Framework**: FastAPI (high performance, automatic Swagger/OpenAPI documentation generation).
-*   **Database ORM**: SQLAlchemy with SQLite for local, zero-config relational storage.
-*   **Data Validation**: Pydantic for request and response serialization schema checking.
-*   **Auto-Seeding**: Upon startup, if the database is empty, it automatically seeds 80 mock Indian real estate properties across 4 cities.
+## 🛠️ Tech Stack
 
-### Frontend ([frontend](file:///c:/Users/rohit/.gemini/antigravity/scratch/property-search-app/frontend))
-*   **Core**: React (v19) configured via Vite for hot-module replacement (HMR).
-*   **Styling**: Tailwind CSS (utility-first styling framework) for sleek, responsive, and glassmorphic designs.
-*   **Icons**: Lucide React for consistent and crisp vector iconography.
-*   **State Management**: React state handles filtering parameters and UI controls dynamically.
+### Frontend
+- **React 19** with Vite
+- **Tailwind CSS** for styling and animations
+- **Lucide React** for beautiful, consistent iconography
+- **Vanilla CSS** for custom glassmorphism effects and keyframe animations
 
----
-
-## 📁 Repository Structure
-
-```text
-property-search-app/
-├── backend/
-│   ├── main.py            # FastAPI entrypoint, routing, and CORS middleware
-│   ├── database.py        # SQLite database setup and auto-seeding script
-│   ├── models.py          # SQLAlchemy ORM declarations for Property model
-│   ├── schemas.py         # Pydantic schemas for request validation & serialization
-│   ├── requirements.txt   # Python dependency list
-│   └── properties.db      # SQLite database file (created on runtime)
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── Navbar.jsx        # Navigation bar with city toggle (Bangalore / Mumbai)
-│   │   │   ├── FilterBar.jsx     # Filtering controls (Buy/Rent, Property Type, BHK, Price)
-│   │   │   ├── PropertyCard.jsx  # Reusable property snippet card
-│   │   │   └── PropertyModal.jsx # Detail modal view with agent contact details
-│   │   ├── App.jsx        # Core application wrapper, state, and fetch handlers
-│   │   ├── index.css      # Core styles & Tailwind CSS directives
-│   │   └── main.jsx       # React DOM bootstrapping
-│   ├── package.json       # Node dependency list and command scripts
-│   └── vite.config.js     # Vite builder setup
-└── README.md              # Project documentation (this file)
-```
-
----
+### Backend
+- **FastAPI** (Python) for a lightning-fast backend API
+- **SQLite & SQLAlchemy** for database management and ORM
+- **OpenAI API** (`gpt-4o-mini`) for the conversational AI property assistant
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-Make sure you have the following installed on your machine:
-*   [Python 3.8+](https://www.python.org/)
-*   [Node.js (v18+)](https://nodejs.org/) & `npm`
+- Node.js (v18+)
+- Python (3.10+)
+- OpenAI API Key
 
----
+### Backend Setup
 
-### 1. Backend Setup
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv .venv
+   # Windows
+   .venv\Scripts\activate
+   # macOS/Linux
+   source .venv/bin/activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Set up your environment variables:
+   Create a `.env` file in the `backend` directory and add your OpenAI API key:
+   ```env
+   OPENAI_API_KEY=your_openai_api_key_here
+   ```
+5. Run the development server:
+   ```bash
+   uvicorn main:app --reload --port 8000
+   ```
+   *(On first run, the SQLite database will be automatically seeded with mock property data).*
 
-Navigate to the [backend](file:///c:/Users/rohit/.gemini/antigravity/scratch/property-search-app/backend) directory:
+### Frontend Setup
 
-```bash
-cd backend
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+4. Open your browser and navigate to `http://localhost:5173`.
+
+## 📂 Project Structure
+
+```
+MagicProperty-Elite---Indian-Property-Search-App/
+├── backend/
+│   ├── chat.py             # AI conversational assistant logic & endpoints
+│   ├── assistant.py        # One-shot AI search utility
+│   ├── database.py         # DB connection & seeding logic
+│   ├── main.py             # FastAPI entry point & API routes
+│   ├── models.py           # SQLAlchemy database models
+│   ├── schemas.py          # Pydantic validation schemas
+│   └── .env                # Environment variables (API Keys)
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ChatPanel.jsx       # Floating AI Chat UI
+│   │   │   ├── AssistantPanel.jsx  # AI Search Panel
+│   │   │   ├── PropertyCard.jsx    # Property listing card
+│   │   │   ├── PropertyModal.jsx   # Detailed property view
+│   │   │   ├── FilterBar.jsx       # Search & filters
+│   │   │   └── Navbar.jsx          # Application header
+│   │   ├── App.jsx         # Main application component
+│   │   ├── index.css       # Global styles & animations
+│   │   └── main.jsx        # React DOM entry point
+│   ├── tailwind.config.js  # Tailwind theme configuration
+│   └── package.json        # Frontend dependencies
+└── README.md
 ```
 
-Create a virtual environment:
-```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
+## 📝 Disclaimer
 
-# macOS/Linux
-python3 -m venv venv
-source venv/bin/activate
-```
+This is a mock real estate portal built for demonstration and portfolio purposes. All property details, pricing, pictures, and agent information are simulated.
 
-Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+## 📄 License
 
-Run the backend server:
-```bash
-uvicorn main:app --reload --port 8000
-```
-*   The backend will start at `http://localhost:8000`.
-*   Swagger documentation is automatically generated and accessible at `http://localhost:8000/docs`.
-*   On first run, the SQLite database is automatically created and seeded with 80 sample properties across Bangalore, Mumbai, Chennai, and Hyderabad.
-
----
-
-### 2. Frontend Setup
-
-Navigate to the [frontend](file:///c:/Users/rohit/.gemini/antigravity/scratch/property-search-app/frontend) directory:
-
-```bash
-cd frontend
-```
-
-Install npm packages:
-```bash
-npm install
-```
-
-Start the Vite development server:
-```bash
-npm run dev
-```
-*   The web application will open on a local port (usually `http://localhost:5173`).
-*   Ensure that the backend server is running on `http://localhost:8000` so that properties can load successfully.
-
----
-
-## 🔌 API Endpoints
-
-All API endpoints are defined in [main.py](file:///c:/Users/rohit/.gemini/antigravity/scratch/property-search-app/backend/main.py).
-
-### 1. Get Properties
-*   **URL**: `/api/properties`
-*   **Method**: `GET`
-*   Parameters:
-    *   `city` (string, optional): Filter by city name (e.g., `"Bangalore"`, `"Mumbai"`, `"Chennai"`, `"Hyderabad"`)
-    *   `type` (string, optional): Filter by list type (`"buy"`, `"rent"`)
-    *   `property_type` (string, optional): Filter by housing type (`"flat"`, `"house"`)
-    *   `min_price` (integer, optional): Minimum budget limit in INR
-    *   `max_price` (integer, optional): Maximum budget limit in INR
-    *   `bhk` (integer, optional): Bedrooms count (e.g., `1`, `2`, `3`, `4`)
-    *   `search` (string, optional): Free text search matching title, locality, descriptions, or amenities.
-
-### 2. Get Property Details
-*   **URL**: `/api/properties/{property_id}`
-*   **Method**: `GET`
-*   **Path Variable**: `property_id` (integer) - Unique database key for a property listing.
-
----
-
-## 🎨 Main Application Features
-
-1.  **City Dropdown Selector**: Quickly switch between major metropolises (Bangalore, Mumbai, Chennai, and Hyderabad) directly from the dropdown selector inside the [FilterBar.jsx](file:///c:/Users/rohit/.gemini/antigravity/scratch/property-search-app/frontend/src/components/FilterBar.jsx).
-2.  **Granular Filter System**: Refine search fields through the [FilterBar.jsx](file:///c:/Users/rohit/.gemini/antigravity/scratch/property-search-app/frontend/src/components/FilterBar.jsx) to target specific cities, property styles, types (buy/rent), pricing constraints (both Min and Max Budget), and BHK options.
-3.  **Real-time Keyword Searching**: Enter full text search queries on the fly to inspect property summaries, titles, localities, or amenity descriptions.
-4.  **Responsive Layout**: Full design compatibility with mobile devices, tablets, and large screens, with a premium full-width Hero Header.
-5.  **Interactive Detail Modal**: Open an overlay showing the agent's phone, email, details, and map attributes in [PropertyModal.jsx](file:///c:/Users/rohit/.gemini/antigravity/scratch/property-search-app/frontend/src/components/PropertyModal.jsx).
-
-
-<img width="1919" height="910" alt="image" src="https://github.com/user-attachments/assets/6f4c7baa-3d7a-480c-aa31-57d5641ebc2c" />
-
+This project is open-source and available under the [MIT License](LICENSE).
