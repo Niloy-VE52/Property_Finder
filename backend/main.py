@@ -11,8 +11,6 @@ from database import SessionLocal, init_db
 from models import Property
 from schemas import PropertyResponse
 
-from assistant import parse_user_query_to_filters, build_assistant_additional_details
-from assistant_schemas import AssistantSearchRequest, AssistantSearchResponse
 from chat import router as chat_router
 
 
@@ -86,87 +84,4 @@ def get_property_detail(property_id: int, db: Session = Depends(get_db)):
     return prop
 
 
-@app.post("/api/assistant/search", response_model=AssistantSearchResponse)
-def assistant_search(req: AssistantSearchRequest, db: Session = Depends(get_db)):
-    """AI-assisted property search using OpenAI.
-
-    Steps:
-    1) LLM converts user query into backend search filters.
-    2) Backend queries properties using those filters.
-    3) LLM produces 'additional_details' explanation based on matched results.
-    """
-
-    filters = parse_user_query_to_filters(req.query)
-
-
-    query = db.query(Property)
-
-    if filters.get("city"):
-        query = query.filter(Property.city == filters["city"])
-    if filters.get("type"):
-        query = query.filter(Property.type == filters["type"])
-    if filters.get("property_type"):
-        query = query.filter(Property.property_type == filters["property_type"])
-    if filters.get("bhk") is not None:
-        query = query.filter(Property.bhk == filters["bhk"])
-    if filters.get("min_price") is not None:
-        query = query.filter(Property.price >= filters["min_price"])
-    if filters.get("max_price") is not None:
-        query = query.filter(Property.price <= filters["max_price"])
-
-    # Use full-text-ish search across existing fields
-    if filters.get("search"):
-        search_filter = f"%{filters['search']}%"
-        query = query.filter(
-            Property.title.ilike(search_filter)
-            | Property.locality.ilike(search_filter)
-            | Property.description.ilike(search_filter)
-            | Property.amenities.ilike(search_filter)
-        )
-
-    matches = query.all()
-
-    matches_payload: List[Dict[str, Any]] = [
-        {
-            "id": p.id,
-            "title": p.title,
-            "city": p.city,
-            "locality": p.locality,
-            "price": p.price,
-            "type": p.type,
-            "property_type": p.property_type,
-            "bhk": p.bhk,
-            "bathrooms": p.bathrooms,
-            "area": p.area,
-            "image_filename": p.image_filename,
-            "description": p.description,
-            "amenities": p.amenities,
-            "agent_name": p.agent_name,
-            "agent_phone": p.agent_phone,
-            "agent_email": p.agent_email,
-        }
-        for p in matches[:8]
-    ]
-
-    additional_details = build_assistant_additional_details(
-        user_query=req.query,
-        filters=filters,
-        properties=matches_payload,
-    )
-
-    return AssistantSearchResponse(
-        filters={
-            "city": filters.get("city"),
-            "type": filters.get("type"),
-            "property_type": filters.get("property_type"),
-            "bhk": filters.get("bhk"),
-            "min_price": filters.get("min_price"),
-            "max_price": filters.get("max_price"),
-            "search": filters.get("search"),
-            "sort_preference": filters.get("sort_preference") or "relevance",
-        },
-        matches=matches_payload,
-        additional_details=additional_details,
-        rationale=filters.get("rationale"),
-    )
 
