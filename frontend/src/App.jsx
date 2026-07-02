@@ -3,7 +3,6 @@ import Navbar from './components/Navbar';
 import FilterBar from './components/FilterBar';
 import PropertyCard from './components/PropertyCard';
 import PropertyModal from './components/PropertyModal';
-import AssistantPanel from './components/AssistantPanel';
 import ChatPanel from './components/ChatPanel';
 import { Home, Compass, Info, PhoneCall } from 'lucide-react';
 
@@ -96,10 +95,6 @@ export default function App() {
           activeCity={activeCity}
           onCityChange={setActiveCity}
         />
-
-        {/* AI Assistant Section */}
-        <AssistantPanel activeCity={activeCity} />
-
 
         {/* Listings Section */}
         <div className="mt-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
