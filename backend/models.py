@@ -1,7 +1,19 @@
-from sqlalchemy import Column, Integer, String, Text
-from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    email = Column(String, nullable=False, unique=True, index=True)
+    hashed_password = Column(String, nullable=False)
+    role = Column(String, nullable=False, default="user")  # "user" or "admin"
+
+    properties = relationship("Property", back_populates="owner")
+
 
 class Property(Base):
     __tablename__ = "properties"
@@ -22,3 +34,6 @@ class Property(Base):
     agent_name = Column(String, nullable=False)
     agent_phone = Column(String, nullable=False)
     agent_email = Column(String, nullable=False)
+
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    owner = relationship("User", back_populates="properties")

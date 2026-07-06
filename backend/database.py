@@ -1,32 +1,41 @@
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Base, Property
+from models import Base, Property, User
+from security import hash_password
 from dotenv import load_dotenv
 
 load_dotenv()
 
-
-
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "sqlite:///./properties.db"
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./properties.db")
 
 if DATABASE_URL.startswith("sqlite"):
-    engine = create_engine(
-        DATABASE_URL,
-        connect_args={"check_same_thread": False},
-    )
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 else:
     engine = create_engine(DATABASE_URL)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+DEFAULT_ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+DEFAULT_ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 def init_db():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        # Check if database is already seeded
+        admin = db.query(User).filter(User.email == DEFAULT_ADMIN_EMAIL).first()
+        if not admin:
+            admin = User(
+                name="Site Admin",
+                email=DEFAULT_ADMIN_EMAIL,
+                hashed_password=hash_password(DEFAULT_ADMIN_PASSWORD),
+                role="admin",
+            )
+            db.add(admin)
+            db.commit()
+            db.refresh(admin)
+            print(f"Created default admin account: {DEFAULT_ADMIN_EMAIL} / {DEFAULT_ADMIN_PASSWORD}")
+
         if db.query(Property).count() == 0:
             print("Seeding properties database...")
             mock_properties = [
@@ -1398,6 +1407,8 @@ def init_db():
                     agent_email="venkat.rao@propsearch.com"
                 )
             ]
+            for p in mock_properties:
+                p.owner_id = admin.id
             db.bulk_save_objects(mock_properties)
             db.commit()
             print(f"Successfully seeded database with {len(mock_properties)} properties!")

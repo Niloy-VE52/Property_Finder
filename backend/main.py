@@ -1,24 +1,26 @@
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException, Query, status
 from dotenv import load_dotenv
 
 load_dotenv()
 
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 
-from database import SessionLocal, init_db
-from models import Property
-from schemas import PropertyResponse
+from database import init_db
+from models import Property, User
+from schemas import (
+    PropertyResponse, PropertyCreate, PropertyUpdate,
+    UserCreate, UserLogin, UserResponse, Token,
+)
+from security import hash_password, verify_password, create_access_token
+from auth import get_db, get_current_user
 
 from chat import router as chat_router
-
 
 app = FastAPI(title="Indian Property Search API", version="1.0.0")
 app.include_router(chat_router)
 
-
-# Enable CORS to allow the React frontend to communicate with the API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -27,18 +29,47 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.on_event("startup")
 def startup_event():
-    # Initialize DB tables and seed data if DB is empty
     init_db()
 
-# Dependency to get DB session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+
+# ---------------- Auth ----------------
+
+@app.post("/api/auth/register", response_model=Token)
+def register(payload: UserCreate, db: Session = Depends(get_db)):
+    email = payload.email.lower()
+    if db.query(User).filter(User.email == email).first():
+        raise HTTPException(status_code=400, detail="Email already registered")
+    user = User(
+        name=payload.name,
+        email=email,
+        hashed_password=hash_password(payload.password),
+        role="user",
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    token = create_access_token({"sub": str(user.id)})
+    return Token(access_token=token, user=UserResponse.model_validate(user))
+
+
+@app.post("/api/auth/login", response_model=Token)
+def login(payload: UserLogin, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == payload.email.lower()).first()
+    if not user or not verify_password(payload.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    token = create_access_token({"sub": str(user.id)})
+    return Token(access_token=token, user=UserResponse.model_validate(user))
+
+
+@app.get("/api/auth/me", response_model=UserResponse)
+def get_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
+# ---------------- Properties ----------------
 
 @app.get("/api/properties", response_model=List[PropertyResponse])
 def get_properties(
@@ -49,10 +80,9 @@ def get_properties(
     max_price: Optional[int] = None,
     bhk: Optional[int] = None,
     search: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     query = db.query(Property)
-    
     if city:
         query = query.filter(Property.city.ilike(city))
     if type:
@@ -68,13 +98,21 @@ def get_properties(
     if search:
         search_filter = f"%{search}%"
         query = query.filter(
-            Property.title.ilike(search_filter) | 
-            Property.locality.ilike(search_filter) |
-            Property.description.ilike(search_filter) |
-            Property.amenities.ilike(search_filter)
+            Property.title.ilike(search_filter)
+            | Property.locality.ilike(search_filter)
+            | Property.description.ilike(search_filter)
+            | Property.amenities.ilike(search_filter)
         )
-        
     return query.all()
+
+
+# IMPORTANT: this must be declared BEFORE /api/properties/{property_id}
+@app.get("/api/properties/mine", response_model=List[PropertyResponse])
+def get_my_properties(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if current_user.role == "admin":
+        return db.query(Property).all()
+    return db.query(Property).filter(Property.owner_id == current_user.id).all()
+
 
 @app.get("/api/properties/{property_id}", response_model=PropertyResponse)
 def get_property_detail(property_id: int, db: Session = Depends(get_db)):
@@ -84,4 +122,49 @@ def get_property_detail(property_id: int, db: Session = Depends(get_db)):
     return prop
 
 
+@app.post("/api/properties", response_model=PropertyResponse, status_code=status.HTTP_201_CREATED)
+def create_property(
+    payload: PropertyCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    prop = Property(**payload.model_dump(), owner_id=current_user.id)
+    db.add(prop)
+    db.commit()
+    db.refresh(prop)
+    return prop
 
+
+@app.put("/api/properties/{property_id}", response_model=PropertyResponse)
+def update_property(
+    property_id: int,
+    payload: PropertyUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    prop = db.query(Property).filter(Property.id == property_id).first()
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+    if current_user.role != "admin" and prop.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this property")
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(prop, field, value)
+    db.commit()
+    db.refresh(prop)
+    return prop
+
+
+@app.delete("/api/properties/{property_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_property(
+    property_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    prop = db.query(Property).filter(Property.id == property_id).first()
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+    if current_user.role != "admin" and prop.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this property")
+    db.delete(prop)
+    db.commit()
+    return None
