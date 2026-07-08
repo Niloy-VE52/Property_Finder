@@ -138,7 +138,7 @@ function ChatPropertyCard({ property, onSelect }) {
       {/* Image */}
       <div className="relative h-28 w-full overflow-hidden bg-slate-100">
         <img
-          src={`/images/${property.image_filename}`}
+          src={property.image_url || `/images/${property.image_filename}`}
           alt={property.title}
           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
           onError={(e) => {

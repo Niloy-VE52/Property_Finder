@@ -28,7 +28,8 @@ class Property(Base):
     bhk = Column(Integer, nullable=False)  # number of bedrooms
     bathrooms = Column(Integer, nullable=False)
     area = Column(Integer, nullable=False)  # in sq ft
-    image_filename = Column(String, nullable=False)  # filename in frontend public/images/
+    image_filename = Column(String, nullable=True)  # filename in frontend public/images/
+    image_url = Column(String, nullable=True) 
     description = Column(Text, nullable=False)
     amenities = Column(String, nullable=False)  # comma-separated e.g. "Pool, Gym, Parking"
     agent_name = Column(String, nullable=False)

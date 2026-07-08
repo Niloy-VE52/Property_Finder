@@ -15,6 +15,7 @@ export default function PropertyModal({ property, onClose }) {
     bathrooms,
     area,
     image_filename,
+    image_url,
     description,
     amenities,
     agent_name,
@@ -56,11 +57,11 @@ export default function PropertyModal({ property, onClose }) {
         </button>
 
         {/* Left Side: Property Image */}
-        <div className="relative w-full md:w-1/2 bg-slate-100 aspect-video md:aspect-auto">
+        <div className="relative w-full md:w-1/2 bg-slate-100 aspect-[4/3] md:aspect-auto md:min-h-[500px] overflow-hidden">
           <img
-            src={`/images/${image_filename}`}
+            src={image_url || `/images/${image_filename}`}
             alt={title}
-            className="w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover object-center"
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80";

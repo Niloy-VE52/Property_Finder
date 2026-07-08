@@ -41,7 +41,8 @@ class ChatPropertyMatch(BaseModel):
     bhk: int
     bathrooms: int
     area: int
-    image_filename: str
+    image_filename: Optional[str] = None
+    image_url: Optional[str] = None
     description: str
     amenities: str
     agent_name: str
@@ -184,6 +185,7 @@ def _property_to_dict(p: Property) -> Dict[str, Any]:
         "bathrooms": p.bathrooms,
         "area": p.area,
         "image_filename": p.image_filename,
+        "image_url": p.image_url,
         "description": p.description,
         "amenities": p.amenities,
         "agent_name": p.agent_name,

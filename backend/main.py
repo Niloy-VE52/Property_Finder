@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Query, status
+from fastapi import FastAPI, Depends, HTTPException, Query, status, UploadFile, File
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,6 +15,7 @@ from schemas import (
 )
 from security import hash_password, verify_password, create_access_token
 from auth import get_db, get_current_user
+from storage import upload_image_bytes
 
 from chat import router as chat_router
 
@@ -29,11 +30,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+MAX_IMAGE_SIZE_MB = 5
 
 @app.on_event("startup")
 def startup_event():
     init_db()
 
+
+# ---------------- Image Upload ----------------
+
+@app.post("/api/upload-image")
+async def upload_property_image(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail="Only JPEG, PNG, WEBP or GIF images are allowed",
+        )
+
+    contents = await file.read()
+    if len(contents) > MAX_IMAGE_SIZE_MB * 1024 * 1024:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Image must be smaller than {MAX_IMAGE_SIZE_MB}MB",
+        )
+    if len(contents) == 0:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+    try:
+        url = upload_image_bytes(contents, file.filename or "upload.jpg", file.content_type)
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"url": url}
 
 # ---------------- Auth ----------------
 
@@ -128,6 +160,8 @@ def create_property(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    if not payload.image_url and not payload.image_filename:
+        raise HTTPException(status_code=400, detail="Please upload a property image")
     prop = Property(**payload.model_dump(), owner_id=current_user.id)
     db.add(prop)
     db.commit()

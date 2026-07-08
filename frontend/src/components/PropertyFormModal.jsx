@@ -6,7 +6,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 
 const emptyForm = {
     title: '', city: 'Bangalore', locality: '', price: '', type: 'rent', property_type: 'flat',
-    bhk: 1, bathrooms: 1, area: '', image_filename: 'cozy_flat_interior.png',
+    bhk: 1, bathrooms: 1, area: '', image_filename: '', image_url: '',
     description: '', amenities: '', agent_name: '', agent_phone: '', agent_email: '',
 };
 
@@ -16,15 +16,47 @@ export default function PropertyFormModal({ property, onClose, onSaved }) {
     const [form, setForm] = useState(() => (property ? { ...property } : { ...emptyForm }));
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [uploading, setUploading] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm((f) => ({ ...f, [name]: value }));
     };
 
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setError('');
+        setUploading(true);
+        try {
+            const body = new FormData();
+            body.append('file', file);
+            const res = await fetch(`${API_BASE_URL}/upload-image`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+                body,
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || 'Image upload failed');
+            }
+            const data = await res.json();
+            setForm((f) => ({ ...f, image_url: data.url, image_filename: '' }));
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setUploading(false);
+            e.target.value = '';
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        if (!form.image_url && !form.image_filename) {
+            setError('Please upload a property image before submitting.');
+            return;
+        }
         setSubmitting(true);
         try {
             const payload = {
@@ -33,6 +65,8 @@ export default function PropertyFormModal({ property, onClose, onSaved }) {
                 bhk: Number(form.bhk),
                 bathrooms: Number(form.bathrooms),
                 area: Number(form.area),
+                image_filename: form.image_filename || null,
+                image_url: form.image_url || null,
             };
             const url = isEdit ? `${API_BASE_URL}/properties/${property.id}` : `${API_BASE_URL}/properties`;
             const method = isEdit ? 'PUT' : 'POST';
@@ -43,7 +77,10 @@ export default function PropertyFormModal({ property, onClose, onSaved }) {
             });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                throw new Error(err.detail || 'Failed to save property');
+                const detail = Array.isArray(err.detail)
+                    ? err.detail.map((d) => d.msg).join(', ')
+                    : err.detail;
+                throw new Error(detail || 'Failed to save property');
             }
             onSaved(await res.json());
             onClose();
@@ -102,8 +139,15 @@ export default function PropertyFormModal({ property, onClose, onSaved }) {
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-500 mb-1.5">Price (INR)</label>
-                            <input type="number" name="price" value={form.price} onChange={handleChange} required min="0"
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-brand-400" />
+                            <input
+                                type="number" name="price" value={form.price} onChange={handleChange} required
+                                min={form.type === 'rent' ? 1000 : 100000}
+                                max={form.type === 'rent' ? 10000000 : 5000000000}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-brand-400"
+                            />
+                            <p className="text-[10px] text-slate-400 mt-1">
+                                {form.type === 'rent' ? '₹1,000 – ₹1 Cr per month' : '₹1 Lakh – ₹500 Cr'}
+                            </p>
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-500 mb-1.5">Area (sqft)</label>
@@ -121,14 +165,31 @@ export default function PropertyFormModal({ property, onClose, onSaved }) {
                                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-brand-400" />
                         </div>
                         <div className="col-span-2">
-                            <label className="block text-xs font-bold text-slate-500 mb-1.5">Image</label>
-                            <select name="image_filename" value={form.image_filename} onChange={handleChange}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none">
-                                <option value="cozy_flat_interior.png">Cozy Flat</option>
-                                <option value="modern_villa_bangalore.png">Modern Villa</option>
-                                <option value="luxury_apartment_mumbai.png">Luxury Apartment</option>
-                                <option value="luxury_penthouse.png">Luxury Penthouse</option>
-                            </select>
+                            <label className="block text-xs font-bold text-slate-500 mb-1.5">Property Image</label>
+                            <div className="flex items-center gap-3">
+                                <label className={`cursor-pointer px-4 py-2.5 rounded-xl text-xs font-bold transition-colors ${
+                                    uploading ? 'bg-slate-100 text-slate-400' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                                }`}>
+                                    {uploading ? 'Uploading...' : 'Choose Image'}
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp,image/gif"
+                                        className="hidden"
+                                        onChange={handleImageUpload}
+                                        disabled={uploading}
+                                    />
+                                </label>
+                                {(form.image_url || form.image_filename) ? (
+                                    <img
+                                        src={form.image_url || `/images/${form.image_filename}`}
+                                        alt="Preview"
+                                        className="h-14 w-14 rounded-lg object-cover border border-slate-200"
+                                    />
+                                ) : (
+                                    <span className="text-[10px] text-rose-500 font-medium">No image selected yet</span>
+                                )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-1.5">JPEG, PNG, WEBP or GIF — up to 5MB.</p>
                         </div>
                         <div className="col-span-2">
                             <label className="block text-xs font-bold text-slate-500 mb-1.5">Description</label>
@@ -147,8 +208,13 @@ export default function PropertyFormModal({ property, onClose, onSaved }) {
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-500 mb-1.5">Agent Phone</label>
-                            <input name="agent_phone" value={form.agent_phone} onChange={handleChange} required
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-brand-400" />
+                            <input
+                                name="agent_phone" value={form.agent_phone} onChange={handleChange} required
+                                pattern="^\+?\d{0,3}[\s-]?\d{4,5}[\s-]?\d{4,6}$"
+                                title="Enter a valid phone number, e.g. +91 98765 43210"
+                                placeholder="+91 98765 43210"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-brand-400"
+                            />
                         </div>
                         <div className="col-span-2">
                             <label className="block text-xs font-bold text-slate-500 mb-1.5">Agent Email</label>

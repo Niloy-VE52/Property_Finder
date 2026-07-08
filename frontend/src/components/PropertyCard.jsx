@@ -6,9 +6,11 @@ export default function PropertyCard({ property, onSelect, onEdit, onDelete }) {
   const { user } = useAuth();
   const canManage = user && (user.role === 'admin' || property.owner_id === user.id);
 
-  const {
-    title, city, locality, price, type, property_type, bhk, bathrooms, area, image_filename,
-  } = property;
+ const {
+  title, city, locality, price, type, property_type, bhk, bathrooms, area, image_filename, image_url,
+} = property;
+
+
 
   const formatPrice = (priceVal, typeVal) => {
     const num = Number(priceVal);
@@ -22,7 +24,7 @@ export default function PropertyCard({ property, onSelect, onEdit, onDelete }) {
   return (
     <div className="glass-card rounded-2xl overflow-hidden glass-card-hover flex flex-col h-full border border-slate-100 shadow-sm">
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100 shrink-0">
-        <img src={`/images/${image_filename}`} alt={title}
+        <img src={image_url || `/images/${image_filename}`} alt={title}
           className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
           onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80"; }} />
         <div className="absolute top-3 left-3 flex gap-1.5 z-10">
